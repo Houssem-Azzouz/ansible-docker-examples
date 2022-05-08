@@ -1,0 +1,63 @@
+---
+
+- hosts: all
+  vars:
+    - playbook_user: "someusername"
+  collections:
+    - community.docker
+    # Added to use module names without the FQCN (Fully Qualified Collection Name)
+  tasks:
+    # - name: Grant user rw access to docker socket
+    #   acl:
+    #     path: /var/run/docker.sock
+    #     entity: "{{ playbook_user }}"
+    #     etype: user
+    #     permissions: rw
+    #     state: present
+    #   become: true
+
+    # - name: "Pull Nginx image"
+    #   docker_image:
+    #     name: "{{ item }}"
+    #     source: pull
+    #   loop:
+    #     - nginx
+    #     - httpd
+
+    - name: "Create network1"
+      docker_network:
+        name: network1
+        ipam_config:
+          - iprange: "192.168.1.1/24"
+            subnet: "192.168.1.1/24"
+            gateway: "192.168.1.1"
+        state: present
+
+    # - name: "Create nginx web server with nginx dockerhub image"
+    #   docker_container:
+    #     name: "nginx-container"
+    #     hostname: "nginx-container"
+    #     state: present
+    #     image: nginx
+    #     detach: true
+    #     debug: true
+    #     published_ports:
+    #       - 8080:80
+    #     networks:
+    #       - name: "network1"
+    #         ipv4_address: "192.168.1.3"
+    #     volumes:
+    #       - /opt/dev/docker/pages/404/:/usr/share/nginx/html:rw
+
+    # - name: "Start nginx"
+    #   docker_container:
+    #     name: "nginx-container"
+    #     state: started
+
+    - name: "Create custom nginx image"
+      docker_image:
+        name: "custom-nginx"
+        source: build
+        build:
+          path: /opt/dev/docker/image
+        tag: "1.0"
