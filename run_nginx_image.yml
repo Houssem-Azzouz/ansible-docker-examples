@@ -1,0 +1,53 @@
+---
+
+- hosts: docker_hosts
+  vars:
+    # Replace with username running ansible-playbook
+    - playbook_user: "username"
+  collections:
+    # Added to use module names without the FQCN (Fully Qualified Collection Name)
+    - community.docker
+  tasks:
+    - name: Make sure ACL tools are installed
+      package:
+        name: acl
+        state: present
+
+    # To run docker command without having to elevate permissions
+    - name: Grant user rw access to docker socket
+      acl:
+        path: /var/run/docker.sock
+        entity: "{{ playbook_user }}"
+        etype: user
+        permissions: rw
+        state: present
+      become: true
+
+    - name: "Create network (called network1)"
+      docker_network:
+        name: network1
+        ipam_config:
+          - iprange: "192.168.1.1/24"
+            subnet: "192.168.1.1/24"
+            gateway: "192.168.1.1"
+        state: present
+
+    - name: "Create web server container using nginx dockerhub image"
+      docker_container:
+        name: "nginx-ctr"
+        hostname: "nginx-container"
+        state: present
+        image: nginx
+        pull: true
+        detach: true
+        debug: true
+        published_ports:
+          - 8080:80
+        networks:
+          - name: "network1"
+            ipv4_address: "192.168.1.3"
+
+    - name: "Start container"
+      docker_container:
+        name: "nginx-ctr"
+        state: started

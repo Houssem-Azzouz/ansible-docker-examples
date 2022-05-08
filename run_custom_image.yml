@@ -1,0 +1,67 @@
+---
+
+- hosts: all
+  vars:
+    # Replace with username running ansible-playbook
+    - playbook_user: "username"
+    - clone_dir: "/path/where/the/repo/was/cloned"
+  collections:
+    # Added to use module names without the FQCN (Fully Qualified Collection Name)
+    - community.docker
+  tasks:
+    - name: Make sure ACL tools are installed
+      package:
+        name: acl
+        state: present
+
+    # To run docker command without having to elevate permissions
+    - name: Grant user rw access to docker socket
+      acl:
+        path: /var/run/docker.sock
+        entity: "{{ playbook_user }}"
+        etype: user
+        permissions: rw
+        state: present
+      become: true
+
+    # Not necessary, but it's a good execuse to use the docker_image module
+    - name: "Pull Nginx image"
+      docker_image:
+        name: nginx
+        source: pull
+
+    - name: "Create network 1"
+      docker_network:
+        name: network1
+        ipam_config:
+          - iprange: "192.168.1.1/24"
+            subnet: "192.168.1.1/24"
+            gateway: "192.168.1.1"
+        state: present
+
+    - name: "Create custom nginx image"
+      docker_image:
+        name: "custom-nginx"
+        source: build
+        build:
+          path: "{{ clone_dir }}/ansible-docker/image"
+        tag: "1.0"
+
+    - name: "Create container using custom nginx image"
+      docker_container:
+        name: "cstm-img-ctr"
+        hostname: "custom-img-container"
+        state: present
+        image: custom-nginx:1.0
+        detach: true
+        debug: true
+        published_ports:
+          - 8081:80
+        networks:
+          - name: "network1"
+            ipv4_address: "192.168.1.4"
+
+    - name: "Start custom-nginx"
+      docker_container:
+        name: "cstm-img-ctr"
+        state: started
