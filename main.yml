@@ -1,0 +1,12 @@
+---
+
+- hosts: all
+  tasks:
+    - name: Setup docker host
+      import_playbook: prepare-docker.yml
+    
+    - name: Run an nginx container
+      import_playbook: run_nginx_image.yml
+    
+    - name: Build image locall and run it
+      import_playbook: run_custom_image.yml

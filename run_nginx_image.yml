@@ -1,28 +1,10 @@
 ---
 
 - hosts: docker_hosts
-  vars:
-    # Replace with username running ansible-playbook
-    - playbook_user: "username"
   collections:
     # Added to use module names without the FQCN (Fully Qualified Collection Name)
     - community.docker
   tasks:
-    - name: Make sure ACL tools are installed
-      package:
-        name: acl
-        state: present
-
-    # To run docker command without having to elevate permissions
-    - name: Grant user rw access to docker socket
-      acl:
-        path: /var/run/docker.sock
-        entity: "{{ playbook_user }}"
-        etype: user
-        permissions: rw
-        state: present
-      become: true
-
     - name: "Create network (called network1)"
       docker_network:
         name: network1

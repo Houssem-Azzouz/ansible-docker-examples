@@ -1,0 +1,60 @@
+---
+
+# Based on docker documentation
+
+- hosts: docker_hosts
+  vars:
+    - keyring_path: "/usr/share/keyrings/docker-archive-keyring.gpg"
+    - docker_repo_link: "https://download.docker.com/linux/ubuntu"
+    - play_user: "username"
+  tasks:
+    - name: Install pre-requisites (Ubuntu)
+      apt:
+        name:
+          - ca-certificates
+          - gnupg
+          - lsb-release
+          - acl
+        state: present
+        update_cache: true
+      become: true
+
+    - name: Add docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        keyring: "{{ keyring_path }}"
+        state: present
+      become: true
+
+    - name: Get architecure
+      command: "dpkg --print-architecture"
+      register: server_arch
+
+    - name: Add docker repo
+      apt_repository:
+        repo: "deb [arch={{ server_arch.stdout }} signed-by={{ keyring_path }}] {{ docker_repo_link }} {{ ansible_facts.distribution_release }} stable"
+        state: present
+        update_cache: true
+        filename: docker
+      become: true
+
+    - name: Install docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: True
+      become: true
+
+    # To run docker command without having to elevate permissions
+    - name: Grant user rw access to docker socket
+      acl:
+        path: /var/run/docker.sock
+        entity: "{{ play_user }}"
+        etype: user
+        permissions: rw
+        state: present
+      become: true
