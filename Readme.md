@@ -5,7 +5,9 @@ This repo contains playbooks that:
 - Install docker and its dependencies on the remote server (docker host)
 - Create and start a container that runs the official nginx dockerhub image on the docker host
 - Build an image locally, create and start a container that runs it on the docker host
+
 It is recommended to run within virtual envs (python 2.7 or python 3.6)
+Written for Ubuntu 20.04
 
 Credits for the 404 page used in the locally built image go to: https://codepen.io/AsyrafHussin
 ## Preparations
