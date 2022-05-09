@@ -28,7 +28,7 @@
         name: "custom-nginx"
         source: build
         build:
-          path: "{{ clone_dir }}/ansible-docker/image"
+          path: "{{ clone_dir }}/image"
         tag: "1.0"
 
     - name: "Create container using custom nginx image"
